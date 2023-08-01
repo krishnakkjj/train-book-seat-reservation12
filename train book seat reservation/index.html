@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Train Seat Reservation</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Train Seat Reservation</h1>
+        <div class="coach" id="coach"></div>
+        <div class="controls">
+            <label for="numSeats">Number of seats to book:</label>
+            <input type="number" id="numSeats" min="1" max="7">
+            <button onclick="reserveSeats()">Book Seats</button>
+        </div>
+        <div id="output"></div>
+    </div>
+    <script>
+    const coachRows = 11;
+const coachCols = 7;
+let coach = new Array(coachRows).fill(0).map(() => new Array(coachCols).fill(0));
+let bookedSeats = new Set();
+
+function findAvailableSeatsInRow(row, numSeats) {
+    for (let col = 0; col <= coachCols - numSeats; col++) {
+        if (coach[row].slice(col, col + numSeats).every(seat => seat === 0)) {
+            return col;
+        }
+    }
+    return -1;
+}
+
+function reserveSeats() {
+    const numSeatsToBook = parseInt(document.getElementById("numSeats").value);
+    if (isNaN(numSeatsToBook) || numSeatsToBook <= 0 || numSeatsToBook > 7) {
+        alert("Please enter a valid number of seats (1 to 7).");
+        return;
+    }
+
+    let row = 0;
+    let numSeats = numSeatsToBook;
+    let booked = [];
+
+    while (numSeats > 0 && row < coachRows) {
+        if (numSeats >= 7) {
+            const availableCol = findAvailableSeatsInRow(row, 7);
+            if (availableCol !== -1) {
+                for (let i = 0; i < 7; i++) {
+                    coach[row][availableCol + i] = 1;
+                    bookedSeats.add(`${row}_${availableCol + i}`);
+                }
+                booked.push({ row: row + 1, startSeat: availableCol + 1, endSeat: availableCol + 7 });
+                numSeats -= 7;
+            } else {
+                row++;
+            }
+        } else {
+            const availableCol = findAvailableSeatsInRow(row, numSeats);
+            if (availableCol !== -1) {
+                for (let i = 0; i < numSeats; i++) {
+                    coach[row][availableCol + i] = 1;
+                    bookedSeats.add(`${row}_${availableCol + i}`);
+                }
+                booked.push({ row: row + 1, startSeat: availableCol + 1, endSeat: availableCol + numSeats });
+                numSeats = 0;
+            } else {
+                row++;
+            }
+        }
+    }
+
+    displayCoach();
+    displayBookedSeats(booked);
+}
+
+function displayCoach() {
+    const coachContainer = document.getElementById("coach");
+    coachContainer.innerHTML = "";
+
+    for (let row = 0; row < coachRows; row++) {
+        for (let col = 0; col < coachCols; col++) {
+            const seatDiv = document.createElement("div");
+            seatDiv.classList.add("seat");
+            if (coach[row][col] === 1) {
+                seatDiv.classList.add("booked");
+            }
+            coachContainer.appendChild(seatDiv);
+        }
+    }
+}
+
+function displayBookedSeats(booked) {
+    const outputDiv = document.getElementById("output");
+    outputDiv.innerHTML = "Seats booked: ";
+    booked.forEach((booking) => {
+        outputDiv.innerHTML += `Row ${booking.row}, Seats ${booking.startSeat} to ${booking.endSeat} | `;
+    });
+}
+
+    </script>
+</body>
+</html>
